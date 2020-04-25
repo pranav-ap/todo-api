@@ -1,7 +1,7 @@
 {
   "name": "todo-api",
   "version": "1.0.0",
-  "description": "An Express-based API for Todo lists",
+  "description": "An Express-based REST API for Todo lists",
   "main": "server.js",
   "author": "Pranav AP",
   "license": "MIT",

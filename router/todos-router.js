@@ -30,6 +30,25 @@ router.get('/:id', async (req, res) => {
     res.sendStatus(500)
 })
 
+router.get('/tag/:tag', async (req, res) => {
+    let db = db_manager.get_db()
+
+    let result = await db.collection('todos')
+        .find({
+            "tags": req.params.tag
+        })
+        .project({
+            text: 1
+        })
+        .toArray()
+
+    if (result) {
+        return res.send(result)
+    }
+
+    res.sendStatus(500)
+})
+
 router.post('/', async (req, res) => {
     let db = db_manager.get_db()
 
