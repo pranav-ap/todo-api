@@ -7,7 +7,7 @@ class DatabaseManager {
     }
 
     async connect_to_db() {
-        const connectionURL = "mongodb+srv://House:jYrhNJ7GfCnZvKlv@hobbycluster-axhoq.mongodb.net/test?retryWrites=true&w=majority";
+        const connectionURL = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/test?retryWrites=true&w=majority`
 
         MongoClient.connect(connectionURL, { useNewUrlParser: true, useUnifiedTopology: true },
             (err, client) => {
