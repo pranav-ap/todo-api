@@ -1,64 +1,101 @@
 const express = require('express')
-const shortid = require('shortid')
+const ObjectID = require('mongodb').ObjectID
 const router = express.Router()
 
-let db = {
-    todos: {}
-}
+const { db_manager } = require('./../db')
 
-router.get('/', (req, res) => {
-    let result = db['todos']
-    res.send(result)
-})
+router.get('/', async (req, res) => {
+    let db = db_manager.get_db()
 
-router.get('/:id', (req, res) => {
-    console.log(db['todos'])
+    let result = await db.collection('todos').find({}).toArray()
 
-    if (db['todos'][req.params.id]) {
-        let result = db['todos'][req.params.id]
+    if (result) {
         return res.send(result)
     }
 
     res.sendStatus(500)
 })
 
-router.post('/', (req, res) => {
-    const id = shortid.generate()
+router.get('/:id', async (req, res) => {
+    let db = db_manager.get_db()
 
-    db['todos'][id] = {
-        id,
-        ...req.body
-    }
+    let result = await db.collection('todos').find({
+        "_id": ObjectID(req.params.id)
+    }).toArray()
 
-    let result = db['todos'][id]
-    res.send(result)
-})
-
-router.delete('/:id', (req, res) => {
-    if (db['todos'][req.params.id]) {
-        let result = db['todos'][req.params.id]
-        delete db['todos'][req.params.id]
-        return res.send(result)
+    if (result && result[0]) {
+        return res.send(result[0])
     }
 
     res.sendStatus(500)
 })
 
-router.delete('/', (req, res) => {
-    db['todos'] = {}
-    res.sendStatus(200)
+router.post('/', async (req, res) => {
+    let db = db_manager.get_db()
+
+    let result = await db.collection('todos').insertOne(req.body)
+
+    if (result.ops && result.ops.length == 1) {
+        return res.send(result.ops[0])
+    }
+
+    res.sendStatus(500)
 })
 
-router.patch('/:id', (req, res) => {
-    if (db['todos'][req.params.id]) {
-        let todo = db['todos'][req.params.id]
-        todo = {
-            ...todo,
-            ...req.body
-        }
+router.delete('/:id', async (req, res) => {
+    let db = db_manager.get_db()
 
-        db['todos'][req.params.id] = todo
-        return res.send(todo)
+    let result = await db.collection('todos').deleteOne({
+        "_id": ObjectID(req.params.id)
+    })
+
+    if (result) {
+        return res.send({ "deleted ": result.deletedCount })
+    }
+
+    res.sendStatus(500)
+})
+
+router.delete('/', async (req, res) => {
+    let db = db_manager.get_db()
+
+    let result = await db.collection('todos').deleteMany()
+
+    if (result) {
+        return res.send({ "deleted ": result.deletedCount })
+    }
+
+    res.sendStatus(500)
+})
+
+router.patch('/complete_all', async (req, res) => {
+    let db = db_manager.get_db()
+
+    let result = await db.collection('todos').updateMany({
+        completed: false
+    }, {
+        $set: { completed: true }
+    })
+
+    if (result) {
+        return res.send({ "modifiedCount ": result.modifiedCount })
+    }
+
+    res.sendStatus(500)
+})
+
+router.patch('/:id', async (req, res) => {
+    let db = db_manager.get_db()
+
+    let result = await db.collection('todos').updateOne({
+        "_id": ObjectID(req.params.id)
+    }, {
+        $set: { ...req.body },
+        $currentDate: { lastModified: true }
+    })
+
+    if (result) {
+        return res.send({ "modifiedCount ": result.modifiedCount })
     }
 
     res.sendStatus(500)

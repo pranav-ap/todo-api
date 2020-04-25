@@ -2,33 +2,35 @@ const MongoClient = require('mongodb').MongoClient;
 
 class DatabaseManager {
     constructor() {
-        client = null
-        db = null
+        this.client = null
+        this.db = null
     }
 
-    connect_to_db() {
-        const uri = "mongodb+srv://House:jYrhNJ7GfCnZvKlv@hobbycluster-axhoq.mongodb.net/test?retryWrites=true&w=majority";
+    async connect_to_db() {
+        const connectionURL = "mongodb+srv://House:jYrhNJ7GfCnZvKlv@hobbycluster-axhoq.mongodb.net/test?retryWrites=true&w=majority";
 
-        client = new MongoClient(uri, { useNewUrlParser: true });
+        MongoClient.connect(connectionURL, { useNewUrlParser: true, useUnifiedTopology: true },
+            (err, client) => {
+                if (err) {
+                    throw "Error!"
+                }
 
-        client.connect(err => {
-            if (!err) {
-                db = client.db("zoo")
-            }
-        })
+                this.client = client
+                this.db = this.client.db('test')
+            })
     }
 
     get_db() {
-        return db
+        return this.db
     }
 
     close_db_connection() {
-        if (client) {
-            client.close()
+        if (this.client) {
+            this.client.close()
         }
     }
 }
 
-db_manager = DatabaseManager()
+let db_manager = new DatabaseManager()
 
 module.exports = { db_manager }
