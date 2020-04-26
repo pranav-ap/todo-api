@@ -1,4 +1,4 @@
-const MongoClient = require('mongodb').MongoClient;
+const { MongoClient } = require('mongodb')
 
 class DatabaseManager {
     constructor() {
@@ -9,28 +9,25 @@ class DatabaseManager {
     async connect_to_db() {
         const connectionURL = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/test?retryWrites=true&w=majority`
 
-        MongoClient.connect(connectionURL, { useNewUrlParser: true, useUnifiedTopology: true },
-            (err, client) => {
-                if (err) {
-                    throw "Error!"
-                }
-
-                this.client = client
-                this.db = this.client.db('test')
+        this.client = await MongoClient
+            .connect(connectionURL, {
+                useNewUrlParser: true,
+                useUnifiedTopology: true
             })
+            .catch(err => { console.log(err); });
+
+        this.db = this.client.db('test')
+    }
+
+    async close_db_connection() {
+        if (this.client) {
+            await this.client.close()
+        }
     }
 
     get_db() {
         return this.db
     }
-
-    close_db_connection() {
-        if (this.client) {
-            this.client.close()
-        }
-    }
 }
 
-let db_manager = new DatabaseManager()
-
-module.exports = { db_manager }
+module.exports = { DatabaseManager }

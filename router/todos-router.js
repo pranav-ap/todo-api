@@ -2,12 +2,19 @@ const express = require('express')
 const ObjectID = require('mongodb').ObjectID
 const router = express.Router()
 
-const { db_manager } = require('./../db')
+const { DatabaseManager } = require('./../db')
+
+let db_manager = new DatabaseManager()
 
 router.get('/', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
-    let result = await db.collection('todos').find({}).toArray()
+    let result = await db.collection('todos')
+        .find({})
+        .toArray()
+
+    await db_manager.close_db_connection()
 
     if (result) {
         return res.send(result)
@@ -17,11 +24,14 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:id', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
-    let result = await db.collection('todos').find({
-        "_id": ObjectID(req.params.id)
-    }).toArray()
+    let result = await db.collection('todos')
+        .find({ "_id": ObjectID(req.params.id) })
+        .toArray()
+
+    await db_manager.close_db_connection()
 
     if (result && result[0]) {
         return res.send(result[0])
@@ -31,16 +41,15 @@ router.get('/:id', async (req, res) => {
 })
 
 router.get('/tag/:tag', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
     let result = await db.collection('todos')
-        .find({
-            "tags": req.params.tag
-        })
-        .project({
-            text: 1
-        })
+        .find({ "tags": req.params.tag })
+        .project({ text: 1 })
         .toArray()
+
+    await db_manager.close_db_connection()
 
     if (result) {
         return res.send(result)
@@ -50,9 +59,11 @@ router.get('/tag/:tag', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
     let result = await db.collection('todos').insertOne(req.body)
+    await db_manager.close_db_connection()
 
     if (result.ops && result.ops.length == 1) {
         return res.send(result.ops[0])
@@ -62,11 +73,14 @@ router.post('/', async (req, res) => {
 })
 
 router.delete('/:id', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
     let result = await db.collection('todos').deleteOne({
         "_id": ObjectID(req.params.id)
     })
+
+    await db_manager.close_db_connection()
 
     if (result) {
         return res.send({ "deleted ": result.deletedCount })
@@ -76,9 +90,11 @@ router.delete('/:id', async (req, res) => {
 })
 
 router.delete('/', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
     let result = await db.collection('todos').deleteMany()
+    await db_manager.close_db_connection()
 
     if (result) {
         return res.send({ "deleted ": result.deletedCount })
@@ -88,13 +104,16 @@ router.delete('/', async (req, res) => {
 })
 
 router.patch('/complete_all', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
     let result = await db.collection('todos').updateMany({
         completed: false
     }, {
         $set: { completed: true }
     })
+
+    await db_manager.close_db_connection()
 
     if (result) {
         return res.send({ "modifiedCount ": result.modifiedCount })
@@ -104,7 +123,8 @@ router.patch('/complete_all', async (req, res) => {
 })
 
 router.patch('/:id', async (req, res) => {
-    let db = db_manager.get_db()
+    await db_manager.connect_to_db()
+    let db = await db_manager.get_db()
 
     let result = await db.collection('todos').updateOne({
         "_id": ObjectID(req.params.id)
@@ -112,6 +132,8 @@ router.patch('/:id', async (req, res) => {
         $set: { ...req.body },
         $currentDate: { lastModified: true }
     })
+
+    await db_manager.close_db_connection()
 
     if (result) {
         return res.send({ "modifiedCount ": result.modifiedCount })
