@@ -4,7 +4,7 @@ const { ObjectID } = require('mongodb')
 
 const { DatabaseManager } = require('./../db')
 
-describe('Todo Tests', () => {
+describe('Todos Route Tests', () => {
     let db_manager = null
     let mock_data = [
         {
@@ -72,7 +72,7 @@ describe('Todo Tests', () => {
             const tag = 'home'
 
             const response = await request(app)
-                .post(`/api/todos/tags/${tag}`)
+                .get(`/api/todos/tags/${tag}`)
                 .send()
 
             expect(response.status).toEqual(200)
