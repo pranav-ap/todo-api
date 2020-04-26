@@ -15,8 +15,8 @@
   "scripts": {
     "start": "node server.js",
     "start-dev": "env-cmd nodemon server.js",
-    "test": "jest",
-    "test:watch": "env-cmd jest --watch --detectOpenHandles"
+    "test": "jest --detectOpenHandles --unhandled-rejections=strict",
+    "test:watch": "env-cmd jest --watch --detectOpenHandles --unhandled-rejections=strict"
   },
   "devDependencies": {
     "@shelf/jest-mongodb": "^1.1.5",
